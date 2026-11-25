@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منصة المستر التعليمية — بوابة الطالب والكورسات والكتب</title>
+
+  <!-- خط Cairo العربي الحديث -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS عبر CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'system-ui', '-apple-system', 'sans-serif'],
+            display: ['Cairo', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow-x: hidden;
+      margin: 0;
+    }
+
+    /* =====================================================================
+       خلفية متحركة بطيئة وناعمة (Slow Ambient Drifting Orbs & Grid Shimmer)
+       ===================================================================== */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -10;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(79, 70, 229, 0.08), transparent 46%),
+        radial-gradient(circle at 86% 16%, rgba(13, 148, 136, 0.08), transparent 46%),
+        radial-gradient(circle at 50% 88%, rgba(245, 158, 11, 0.07), transparent 50%),
+        linear-gradient(180deg, #f8fafc 0%, #f1f5f9 55%, #f8fafc 100%);
+    }
+
+    .ambient-grid {
+      position: absolute;
+      inset: -20%;
+      opacity: 0.5;
+      background-image: radial-gradient(rgba(79, 70, 229, 0.11) 1.25px, transparent 1.25px);
+      background-size: 30px 30px;
+      will-change: transform, opacity;
+      animation: gridShimmer 26s ease-in-out infinite alternate;
+    }
+
+    .ambient-orb {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(68px);
+      will-change: transform, opacity;
+    }
+
+    .orb-1 {
+      width: 440px;
+      height: 440px;
+      top: -90px;
+      right: -70px;
+      background: rgba(79, 70, 229, 0.16);
+      animation: driftOrbOne 22s ease-in-out infinite alternate;
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      top: 32%;
+      left: -100px;
+      background: rgba(13, 148, 136, 0.14);
+      animation: driftOrbTwo 27s ease-in-out infinite alternate;
+    }
+
+    .orb-3 {
+      width: 460px;
+      height: 460px;
+      bottom: -140px;
+      right: 20%;
+      background: rgba(245, 158, 11, 0.13);
+      animation: driftOrbThree 24s ease-in-out infinite alternate;
+    }
+
+    @keyframes driftOrbOne {
+      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.72; }
+      50% { transform: translate3d(-44px, 38px, 0) scale(1.06); opacity: 0.92; }
+      100% { transform: translate3d(-20px, 72px, 0) scale(0.98); opacity: 0.76; }
+    }
+
+    @keyframes driftOrbTwo {
+      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.68; }
+      50% { transform: translate3d(52px, -34px, 0) scale(1.07); opacity: 0.88; }
+      100% { transform: translate3d(28px, 42px, 0) scale(0.97); opacity: 0.72; }
+    }
+
+    @keyframes driftOrbThree {
+      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+      50% { transform: translate3d(-38px, -44px, 0) scale(1.05); opacity: 0.86; }
+      100% { transform: translate3d(34px, -20px, 0) scale(1.01); opacity: 0.72; }
+    }
+
+    @keyframes gridShimmer {
+      0% { transform: translate3d(0, 0, 0); opacity: 0.38; }
+      100% { transform: translate3d(26px, 26px, 0); opacity: 0.58; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orb-1, .orb-2, .orb-3, .ambient-grid {
+        animation: none !important;
+        transform: none !important;
+      }
+    }
+
+    .glass-surface {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+    }
+  </style>
+</head>
+<body>
+  <!-- الخلفية المتحركة البطيئة -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-grid"></div>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+  </div>
+
+  <!-- حاوية التطبيق الرئيسية -->
+  <div id="app" class="min-h-screen flex flex-col"></div>
+
+  <script>
+    // =========================================================================
+    // البيانات الأولية للمنصة (مميزات المستر، الكورسات، الكتب، الامتحانات، الواجبات)
+    // =========================================================================
+    const STORAGE_KEY = 'mister_student_portal_full_v2';
+
+    const TEACHER_FEATURES = [
+      {
+        title: 'شرح مبسط من الصفر للاحتراف',
+        desc: 'تأسيس متدرج يربط أساسيات المنهج بأصعب أفكار المسائل بأسلوب سلس ومباشر يناسب كل المستويات.',
+        badge: 'أسلوب الشرح',
+        tone: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+      },
+      {
+        title: 'امتحانات أسبوعية وشاملة',
+        desc: 'اختبارات دورية بنظام البابل شيت والأسئلة الحديثة مع تصحيح فوري وتحليل نقاط القوة والضعف.',
+        badge: 'قياس المستوى',
+        tone: 'bg-teal-50 text-teal-700 border-teal-200'
+      },
+      {
+        title: 'تقارير متابعة لولي الأمر',
+        desc: 'إرسال تقارير دورية بدرجات الامتحانات ونسبة حضور المحاضرات والواجبات مباشرة على رقم ولي الأمر.',
+        badge: 'تواصل مستمر',
+        tone: 'bg-amber-50 text-amber-800 border-amber-200'
+      },
+      {
+        title: 'ملخصات PDF وخرائط ذهنية',
+        desc: 'ملفات منظمة جاهزة للطباعة لكل محاضرة تلخص القوانين والملاحظات الهامة قبل ليلة الامتحان.',
+        badge: 'مذكرات مركزة',
+        tone: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      },
+      {
+        title: 'دعم أكاديمي والرد على الأسئلة',
+        desc: 'فريق مساعدين متخصص للرد على استفسارات الطلاب وشرح خطوات المسائل غير المفهومة طوال الأسبوع.',
+        badge: 'دعم 24/7',
+        tone: 'bg-sky-50 text-sky-700 border-sky-200'
+      },
+      {
+        title: 'بنك أسئلة وامتحانات السنوات السابقة',
+        desc: 'تدريب عملي على مئات الأسئلة المتدرجة ونماذج الوزارة الاسترشادية لضمان أعلى الدرجات.',
+        badge: 'بنك الأسئلة',
+        tone: 'bg-violet-50 text-violet-700 border-violet-200'
+      }
+    ];
+
+    const ALL_COURSES = [
+      {
+        id: 'c-phys-3',
+        title: 'الفيزياء الكهربية والتيار المستمر — 3 ثانوي',
+        subject: 'الفيزياء',
+        grade: 'الصف الثالث الثانوي - ثانوية عامة',
+        type: 'شرح + حل مكثف',
+        teacher: 'م. أحمد المنشاوي',
+        hours: '14.5 ساعة',
+        lessonsCount: 12,
+        price: 350,
+        code: 'TAFAWOQ-2026',
+        accent: 'from-indigo-600 via-indigo-700 to-slate-900',
+        desc: 'شرح تفصيلي لشدة التيار، فرق الجهد، قانون أوم للدوائر المغلقة، توصيل المقاومات، وقانونا كيرشوف مع حل مسائل الامتحانات.',
+        lessons: [
+          { id: 'l-p1', title: 'المحاضرة 1: التيار الكهربي وفرق الجهد وقانون أوم', duration: '48:20', pdfName: 'ملخص_التيار_وقانون_أوم.pdf', watched: true },
+          { id: 'l-p2', title: 'المحاضرة 2: توصيل المقاومات على التوالي والتوازي واختزال الدوائر', duration: '55:10', pdfName: 'خريطة_توصيل_المقاومات.pdf', watched: true },
+          { id: 'l-p3', title: 'المحاضرة 3: قانونا كيرشوف وحل الدوائر متعددة البطاريات', duration: '61:40', pdfName: 'مسائل_كيرشوف_محلولة.pdf', watched: false }
+        ]
+      },
+      {
+        id: 'c-chem-3',
+        title: 'الكيمياء العضوية والهيدروكربونات — 3 ثانوي',
+        subject: 'الكيمياء',
+        grade: 'الصف الثالث الثانوي - ثانوية عامة',
+        type: 'تأسيس + شرح',
+        teacher: 'د. سارة الشافعي',
+        hours: '12 ساعة',
+        lessonsCount: 10,
+        price: 300,
+        code: 'CHEM-2026',
+        accent: 'from-teal-600 via-emerald-700 to-slate-900',
+        desc: 'إتقان الكيمياء العضوية من البداية: الأيزومرات، تسمية الأيوباك، وتفاعلات الألكانات والألكينات والألكاينات والبنزين العطري.',
+        lessons: [
+          { id: 'l-c1', title: 'المحاضرة 1: مدخل الكيمياء العضوية والأيزومرات وتسمية الأيوباك', duration: '50:15', pdfName: 'قواعد_تسمية_الأيوباك.pdf', watched: false },
+          { id: 'l-c2', title: 'المحاضرة 2: الألكانات وطرق تحضيرها وتفاعلات الاستبدال', duration: '46:30', pdfName: 'مخطط_تفاعلات_الألكانات.pdf', watched: false }
+        ]
+      },
+      {
+        id: 'c-math-2',
+        title: 'التفاضل وحساب المثلثات — الصف الثاني الثانوي',
+        subject: 'الرياضيات',
+        grade: 'الصف الثاني الثانوي',
+        type: 'شرح + مراجعة',
+        teacher: 'أ. محمود عبد العزيز',
+        hours: '11 ساعة',
+        lessonsCount: 9,
+        price: 280,
+        code: 'MATH-2SEC',
+        accent: 'from-amber-600 via-orange-700 to-slate-900',
+        desc: 'شرح مبسط للنهايات، الاتصال، قواعد الاشتقاق، وقانون الجيب وجيب التمام مع تدريبات شاملة لكل درس.',
+        lessons: [
+          { id: 'l-m1', title: 'المحاضرة 1: مقدمة في النهايات وإيجاد النهاية جبرياً وبيانياً', duration: '44:00', pdfName: 'ملخص_قوانين_النهايات.pdf', watched: false },
+          { id: 'l-m2', title: 'المحاضرة 2: قانون الجيب وجيب التمام وحل المثلث', duration: '52:10', pdfName: 'تمارين_حساب_المثلثات.pdf', watched: false }
+        ]
+      },
+      {
+        id: 'c-phys-1',
+        title: 'القياس الفيزيائي والكميات المتجهة — أولى ثانوي',
+        subject: 'الفيزياء',
+        grade: 'الصف الأول الثانوي',
+        gradeTag: 'أولى ثانوي',
+        type: 'تأسيس + شرح',
+        teacher: 'م. أحمد المنشاوي',
+        hours: '9.5 ساعة',
+        lessonsCount: 8,
+        price: 250,
+        code: 'PHYS-1SEC',
+        accent: 'from-sky-600 via-blue-700 to-slate-900',
+        desc: 'تأسيس قوي لطلاب الصف الأول الثانوي في صيغة الأبعاد، خطأ القياس، وضرب المتجهات مع تجارب ومسائل محلولة.',
+        lessons: [
+          { id: 'l-f1', title: 'المحاضرة 1: القياس الفيزيائي وصيغة الأبعاد ووحدات القياس', duration: '42:30', pdfName: 'أساسيات_القياس_وصيغة_الأبعاد.pdf', watched: false },
+          { id: 'l-f2', title: 'المحاضرة 2: الخطأ المطلق والنسبي وحسابات القياس غير المباشر', duration: '49:15', pdfName: 'مسائل_الخطأ_في_القياس.pdf', watched: false }
+        ]
+      }
+    ];
+
+    const ALL_BOOKS = [
+      {
+        id: 'b-1',
+        title: 'كتاب الشرح وبنك أسئلة الفيزياء الكهربية',
+        subject: 'الفيزياء — 3 ثانوي',
+        pages: 264,
+        price: 165,
+        format: 'مطبوع + PDF تفاعلي',
+        tone: 'from-indigo-600 to-blue-800',
+        desc: 'يشمل شرح كل درس بالألوان مع أكثر من 850 سؤالاً متدرجاً ونموذج إجابة تفصيلي لأفكار الامتحانات.',
+        sample: 'يحتوي الفصل الأول على ملخص العلاقات البيانية، 180 سؤال اختيار من متعدد، و25 مسألة مقالية محلولة بالخطوات.'
+      },
+      {
+        id: 'b-2',
+        title: 'موسوعة الكيمياء العضوية وخرائط التحويلات',
+        subject: 'الكيمياء — 3 ثانوي',
+        pages: 210,
+        price: 145,
+        format: 'مطبوع + خرائط ذهنية',
+        tone: 'from-teal-600 to-emerald-800',
+        desc: 'مرجع شامل لمخططات التفاعلات العضوية وتسمية الأيوباك وتدريبات التحويلات الكيميائية خطوة بخطوة.',
+        sample: 'يتضمن لوحة شاملة تربط الألكانات والألكينات والألكاينات والكحولات والأحماض الكربوكسيلية في مخطط بصري واحد.'
+      },
+      {
+        id: 'b-3',
+        title: 'مذكرة المراجعة النهائية والنماذج الاسترشادية',
+        subject: 'جميع الصفوف الثانوية',
+        pages: 185,
+        price: 120,
+        format: 'PDF فوري + مطبوع',
+        tone: 'from-amber-600 to-orange-800',
+        desc: 'خلاصة القوانين وأهم أفكار الامتحانات مع 8 نماذج شاملة للتدريب على إدارة الوقت والحل السريع.',
+        sample: 'تضم المذكرة أهم 100 فكرة متكررة في امتحانات آخر العام مع إرشادات لتجنب الأخطاء الشائعة.'
+      }
+    ];
+
+    const EXAMS_DATA = [
+      {
+        id: 'ex-1',
+        title: 'اختبار الفصل الأول: التيار الكهربي وقانون أوم',
+        subject: 'الفيزياء',
+        durationMinutes: 15,
+        questions: [
+          {
+            id: 'q1',
+            text: 'إذا زاد طول سلك معدني إلى الضعف وقلت مساحة مقطعه إلى النصف، فإن مقاومته الكهربائية:',
+            options: ['تزداد لأربعة أمثالها', 'تقل إلى الربع', 'تظل ثابتة', 'تزداد للضعف'],
+            correct: 0
+          },
+          {
+            id: 'q2',
+            text: 'وحدة قياس القوة الدافعة الكهربية (emf) تكافئ:',
+            options: ['جول / كولوم', 'أمبير × أوم', 'كلاهما صحيح', 'وات × ثانية'],
+            correct: 2
+          },
+          {
+            id: 'q3',
+            text: 'في دائرة مغلقة تحتوي على بطارية لها مقاومة داخلية، عند فتح المفتاح فإن قراءة الفولتميتر المتصل بين قطبيها:',
+            options: ['تساوي القوة الدافعة الكهربية للعمود', 'تنعدم', 'تقل للنصف', 'تساوي قيمة المقاومة الداخلية'],
+            correct: 0
+          }
+        ]
+      },
+      {
+        id: 'ex-2',
+        title: 'اختبار أساسيات الكيمياء العضوية وتسمية الأيوباك',
+        subject: 'الكيمياء',
+        durationMinutes: 10,
+        questions: [
+          {
+            id: 'q21',
+            text: 'الصيغة الجزيئية العامة للألكانات مفتوحة السلسلة هي:',
+            options: ['CnH2n+2', 'CnH2n', 'CnH2n-2', 'CnHn'],
+            correct: 0
+          },
+          {
+            id: 'q22',
+            text: 'أبسط ألكان يبدأ فيه ظهور المشابهة الجزيئية (الأيزومرية) هو:',
+            options: ['الإيثان C2H6', 'البروبان C3H8', 'البيوتان C4H10', 'الميثان CH4'],
+            correct: 2
+          }
+        ]
+      }
+    ];
+
+    const INITIAL_ASSIGNMENTS = [
+      {
+        id: 'hw-1',
+        title: 'واجب المحاضرة 1: مسائل شدة التيار وقانون أوم',
+        lectureName: 'المحاضرة 1: التيار الكهربي وقانون أوم',
+        dueDate: 'الخميس القادم — 10:00 م',
+        status: 'graded', // 'pending' | 'submitted' | 'graded'
+        grade: '19 / 20',
+        feedback: 'أداء ممتاز يا بطل! خطوات الحل منظمة ودقيقة جداً.',
+        studentAnswer: 'تم حل جميع المسائل من صفحة 12 إلى 18 وإرفاق خطوات التعويض.'
+      },
+      {
+        id: 'hw-2',
+        title: 'واجب المحاضرة 2: اختزال المقاومات وحساب المقاومة المكافئة',
+        lectureName: 'المحاضرة 2: توصيل المقاومات على التوالي والتوازي',
+        dueDate: 'الأحد القادم — 09:00 م',
+        status: 'pending',
+        grade: null,
+        feedback: null,
+        studentAnswer: ''
+      },
+      {
+        id: 'hw-3',
+        title: 'واجب المحاضرة 3: تطبيقات قانونا كيرشوف الأول والثاني',
+        lectureName: 'المحاضرة 3: قانونا كيرشوف وحل الدوائر',
+        dueDate: 'الثلاثاء القادم — 11:00 م',
+        status: 'pending',
+        grade: null,
+        feedback: null,
+        studentAnswer: ''
+      }
+    ];
+
+    const INITIAL_RESULTS = [
+      {
+        id: 'res-init-1',
+        examTitle: 'تقييم تأسيسي: أساسيات الفيزياء والرسوم البيانية',
+        date: '2026-11-18',
+        score: 18,
+        total: 20,
+        percentage: 90,
+        parentReported: true
+      }
+    ];
+
+    // =========================================================================
+    // إدارة الحالة والتخزين في localStorage
+    // =========================================================================
+    function getDefaultState() {
+      return {
+        accounts: [
+          {
+            fullName: 'يوسف طارق محمود',
+            studentPhone: '01012345678',
+            parentPhone: '01198765432',
+            email: 'youssef@student.edu.eg',
+            password: '123456',
+            grade: 'الصف الثالث الثانوي - ثانوية عامة'
+          }
+        ],
+        currentUser: null,
+        view: 'landing', // 'landing' | 'dashboard'
+        dashboardTab: 'lectures', // 'lectures' | 'exams' | 'results' | 'assignments' | 'suggested'
+        courseFilter: 'الكل',
+        enrolledCourseIds: ['c-phys-3'],
+        watchedLessonIds: ['l-p1', 'l-p2'],
+        activeCourseId: 'c-phys-3',
+        activeLessonId: 'l-p3',
+        orderedBookIds: [],
+        assignments: INITIAL_ASSIGNMENTS,
+        results: INITIAL_RESULTS,
+        activeExamId: 'ex-1',
+        examAnswers: {},
+        lastExamSubmitted: false,
+        modal: null, // null | { type: 'auth', tab: 'register'|'login' } | { type: 'book', bookId } | { type: 'homework', hwId } | { type: 'profile' }
+        authError: '',
+        toast: null
+      };
+    }
+
+    function loadState() {
+      const def = getDefaultState();
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return def;
+        const saved = JSON.parse(raw);
+        return {
+          ...def,
+          accounts: Array.isArray(saved.accounts) && saved.accounts.length ? saved.accounts : def.accounts,
+          currentUser: saved.currentUser || null,
+          view: saved.currentUser ? 'dashboard' : 'landing',
+          dashboardTab: saved.dashboardTab || 'lectures',
+          enrolledCourseIds: Array.isArray(saved.enrolledCourseIds) ? saved.enrolledCourseIds : def.enrolledCourseIds,
+          watchedLessonIds: Array.isArray(saved.watchedLessonIds) ? saved.watchedLessonIds : def.watchedLessonIds,
+          activeCourseId: saved.activeCourseId || def.activeCourseId,
+          activeLessonId: saved.activeLessonId || def.activeLessonId,
+          orderedBookIds: Array.isArray(saved.orderedBookIds) ? saved.orderedBookIds : [],
+          assignments: Array.isArray(saved.assignments) ? saved.assignments : def.assignments,
+          results: Array.isArray(saved.results) ? saved.results : def.results
+        };
+      } catch {
+        return def;
+      }
+    }
+
+    let state = loadState();
+    let toastTimer = null;
+
+    function persistState() {
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            accounts: state.accounts,
+            currentUser: state.currentUser,
+            dashboardTab: state.dashboardTab,
+            enrolledCourseIds: state.enrolledCourseIds,
+            watchedLessonIds: state.watchedLessonIds,
+            activeCourseId: state.activeCourseId,
+            activeLessonId: state.activeLessonId,
+            orderedBookIds: state.orderedBookIds,
+            assignments: state.assignments,
+            results: state.results
+          })
+        );
+      } catch (e) {
+        console.error('خطأ في حفظ البيانات:', e);
+      }
+    }
+
+    function showToast(text, tone = 'success') {
+      state.toast = { text, tone };
+      render();
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        state.toast = null;
+        render();
+      }, 3400);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function isValidEgyptianMobile(phone) {
+      return /^01[0125][0-9]{8}$/.test((phone || '').trim());
+    }
+
+    // =========================================================================
+    // دوال التفاعل (التسجيل، الدخول، المحاضرات، الاختبارات، الواجبات، الكورسات)
+    // =========================================================================
+    window.openAuthModal = function (tab = 'register') {
+      state.modal = { type: 'auth', tab };
+      state.authError = '';
+      render();
+    };
+
+    window.closeModal = function () {
+      state.modal = null;
+      state.authError = '';
+      render();
+    };
+
+    window.switchAuthTab = function (tab) {
+      state.modal = { type: 'auth', tab };
+      state.authError = '';
+      render();
+    };
+
+    window.handleRegisterSubmit = function (event) {
+      event.preventDefault();
+      const form = event.target;
+      const fullName = form.fullName.value.trim();
+      const studentPhone = form.studentPhone.value.trim();
+      const parentPhone = form.parentPhone.value.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value.trim();
+      const grade = form.grade.value;
+
+      const words = fullName.split(/\s+/).filter(Boolean);
+      if (words.length < 2) {
+        state.authError = 'يرجى إدخال الاسم بالكامل (اسمين على الأقل، مثال: أحمد محمد علي).';
+        render();
+        return;
+      }
+
+      if (!isValidEgyptianMobile(studentPhone)) {
+        state.authError = 'رقم هاتف الطالب غير صحيح. يجب أن يبدأ بـ 010 أو 011 أو 012 أو 015 ومكون من 11 رقماً.';
+        render();
+        return;
+      }
+
+      if (!isValidEgyptianMobile(parentPhone)) {
+        state.authError = 'رقم ولي الأمر غير صحيح. يجب أن يكون رقم موبايل مصري مكون من 11 رقماً.';
+        render();
+        return;
+      }
+
+      if (studentPhone === parentPhone) {
+        state.authError = 'يجب أن يختلف رقم هاتف ولي الأمر عن رقم هاتف الطالب.';
+        render();
+        return;
+      }
+
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        state.authError = 'صيغة البريد الإلكتروني غير صحيحة (يمكنك تركه فارغاً لأنه اختياري).';
+        render();
+        return;
+      }
+
+      if (password.length < 4) {
+        state.authError = 'يرجى إدخال كلمة مرور لا تقل عن 4 أحرف أو أرقام.';
+        render();
+        return;
+      }
+
+      const newUser = {
+        fullName,
+        studentPhone,
+        parentPhone,
+        email,
+        password,
+        grade
+      };
+
+      const existingIdx = state.accounts.findIndex((a) => a.studentPhone === studentPhone);
+      if (existingIdx >= 0) {
+        state.accounts[existingIdx] = newUser;
+      } else {
+        state.accounts.unshift(newUser);
+      }
+
+      // تفعيل كورس مناسب لصف الطالب تلقائياً كبداية ترحيبية
+      const matchingCourse = ALL_COURSES.find((c) => c.grade === grade) || ALL_COURSES[0];
+      if (matchingCourse && !state.enrolledCourseIds.includes(matchingCourse.id)) {
+        state.enrolledCourseIds.push(matchingCourse.id);
+      }
+      if (matchingCourse) {
+        state.activeCourseId = matchingCourse.id;
+        state.activeLessonId = matchingCourse.lessons[0]?.id || '';
+      }
+
+      state.currentUser = newUser;
+      state.modal = null;
+      state.authError = '';
+      state.view = 'dashboard';
+      state.dashboardTab = 'lectures';
+      persistState();
+      render();
+      showToast(`تم إنشاء حسابك بنجاح يا ${newUser.fullName}! مرحباً بك في بوابة الطالب.`);
+    };
+
+    window.handleLoginSubmit = function (event) {
+      event.preventDefault();
+      const form = event.target;
+      const identifier = form.identifier.value.trim();
+      const password = form.password.value.trim();
+
+      if (!identifier || !password) {
+        state.authError = 'يرجى إدخال رقم هاتف الطالب أو البريد الإلكتروني وكلمة المرور.';
+        render();
+        return;
+      }
+
+      const found = state.accounts.find(
+        (acc) =>
+          (acc.studentPhone === identifier ||
+            (acc.email && acc.email.toLowerCase() === identifier.toLowerCase())) &&
+          acc.password === password
+      );
+
+      if (!found) {
+        state.authError = 'بيانات الدخول غير مطابقة. تأكد من رقم الهاتف وكلمة المرور أو أنشئ حساباً جديداً.';
+        render();
+        return;
+      }
+
+      state.currentUser = found;
+      state.modal = null;
+      state.authError = '';
+      state.view = 'dashboard';
+      state.dashboardTab = 'lectures';
+      persistState();
+      render();
+      showToast(`أهلاً بعودتك يا ${found.fullName}!`);
+    };
+
+    window.logoutStudent = function () {
+      state.currentUser = null;
+      state.view = 'landing';
+      state.modal = null;
+      persistState();
+      render();
+      showToast('تم تسجيل الخروج بنجاح.', 'info');
+    };
+
+    window.navigateView = function (targetView, sectionId = null) {
+      state.view = targetView;
+      render();
+      if (sectionId) {
+        setTimeout(() => {
+          document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+        }, 40);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    window.setCourseFilter = function (filterVal) {
+      state.courseFilter = filterVal;
+      render();
+    };
+
+    window.openBookModal = function (bookId) {
+      state.modal = { type: 'book', bookId };
+      render();
+    };
+
+    window.orderBook = function (bookId) {
+      if (!state.orderedBookIds.includes(bookId)) {
+        state.orderedBookIds.push(bookId);
+        persistState();
+      }
+      const book = ALL_BOOKS.find((b) => b.id === bookId);
+      state.modal = null;
+      render();
+      showToast(`تم تسجيل طلب «${book?.title || 'الكتاب'}» بنجاح!`);
+    };
+
+    window.setDashboardTab = function (tab) {
+      state.dashboardTab = tab;
+      persistState();
+      render();
+    };
+
+    window.selectActiveCourse = function (courseId) {
+      state.activeCourseId = courseId;
+      const c = ALL_COURSES.find((item) => item.id === courseId);
+      if (c && c.lessons.length) {
+        state.activeLessonId = c.lessons[0].id;
+      }
+      persistState();
+      render();
+    };
+
+    window.selectActiveLesson = function (lessonId) {
+      state.activeLessonId = lessonId;
+      persistState();
+      render();
+    };
+
+    window.toggleWatchedLesson = function (lessonId) {
+      if (state.watchedLessonIds.includes(lessonId)) {
+        state.watchedLessonIds = state.watchedLessonIds.filter((id) => id !== lessonId);
+      } else {
+        state.watchedLessonIds.push(lessonId);
+        showToast('تم تحديد المحاضرة كمشاهَدة وتحديث نسبة تقدمك!');
+      }
+      persistState();
+      render();
+    };
+
+    window.triggerPdfPreview = function (pdfName) {
+      showToast(`جاري فتح وتحميل ملف المذكرة: ${pdfName}`);
+    };
+
+    window.selectExam = function (examId) {
+      state.activeExamId = examId;
+      state.examAnswers = {};
+      state.lastExamSubmitted = false;
+      render();
+    };
+
+    window.chooseExamOption = function (qId, optIdx) {
+      if (state.lastExamSubmitted) return;
+      state.examAnswers[qId] = optIdx;
+      render();
+    };
+
+    window.submitCurrentExam = function () {
+      const exam = EXAMS_DATA.find((e) => e.id === state.activeExamId) || EXAMS_DATA[0];
+      let correct = 0;
+      exam.questions.forEach((q) => {
+        if (state.examAnswers[q.id] === q.correct) correct++;
+      });
+      const total = exam.questions.length;
+      const percentage = Math.round((correct / total) * 100);
+      const today = new Date().toISOString().slice(0, 10);
+
+      state.results.unshift({
+        id: 'res-' + Date.now(),
+        examTitle: exam.title,
+        date: today,
+        score: correct,
+        total,
+        percentage,
+        parentReported: true
+      });
+
+      state.lastExamSubmitted = true;
+      persistState();
+      render();
+      showToast(`تم تسليم الاختبار (${correct}/${total} — ${percentage}%) وإرسال التقرير لرقم ولي الأمر!`);
+    };
+
+    window.openHomeworkModal = function (hwId) {
+      state.modal = { type: 'homework', hwId };
+      render();
+    };
+
+    window.submitHomework = function (event, hwId) {
+      event.preventDefault();
+      const form = event.target;
+      const answerText = form.answerText.value.trim();
+      const fileInput = form.fileName.value.trim();
+
+      if (!answerText && !fileInput) {
+        showToast('يرجى كتابة إجابة الواجب أو إدخال اسم ملف الحل قبل التسليم.', 'error');
+        return;
+      }
+
+      state.assignments = state.assignments.map((hw) => {
+        if (hw.id !== hwId) return hw;
+        return {
+          ...hw,
+          status: 'submitted',
+          studentAnswer: [answerText, fileInput ? `ملف مرفق: ${fileInput}` : ''].filter(Boolean).join(' — ')
+        };
+      });
+
+      state.modal = null;
+      persistState();
+      render();
+      showToast('تم تسليم الواجب بنجاح! بانتظار مراجعة وتصحيح المستر.');
+    };
+
+    window.enrollCourseDirect = function (courseId) {
+      if (!state.enrolledCourseIds.includes(courseId)) {
+        state.enrolledCourseIds.push(courseId);
+      }
+      state.activeCourseId = courseId;
+      const c = ALL_COURSES.find((item) => item.id === courseId);
+      if (c && c.lessons.length) state.activeLessonId = c.lessons[0].id;
+      state.dashboardTab = 'lectures';
+      persistState();
+      render();
+      showToast(`تم الاشتراك في كورس «${c?.title || ''}» وإضافته إلى تبويب المحاضرات!`);
+    };
+
+    window.redeemCodeInDashboard = function (event) {
+      event.preventDefault();
+      const code = event.target.courseCode.value.trim().toUpperCase();
+      if (!code) return;
+      const found = ALL_COURSES.find((c) => c.code.toUpperCase() === code);
+      if (!found) {
+        showToast('كود التفعيل غير صحيح. جرّب TAFAWOQ-2026 أو CHEM-2026 أو MATH-2SEC أو PHYS-1SEC.', 'error');
+        return;
+      }
+      window.enrollCourseDirect(found.id);
+    };
+
+    window.openProfileModal = function () {
+      state.modal = { type: 'profile' };
+      render();
+    };
+
+    window.saveProfileChanges = function (event) {
+      event.preventDefault();
+      const form = event.target;
+      const fullName = form.fullName.value.trim();
+      const studentPhone = form.studentPhone.value.trim();
+      const parentPhone = form.parentPhone.value.trim();
+      const email = form.email.value.trim();
+
+      if (!isValidEgyptianMobile(studentPhone) || !isValidEgyptianMobile(parentPhone) || studentPhone === parentPhone) {
+        showToast('تأكد من صحة رقم الطالب ورقم ولي الأمر وأن يكونا مختلفين.', 'error');
+        return;
+      }
+
+      state.currentUser = {
+        ...state.currentUser,
+        fullName: fullName || state.currentUser.fullName,
+        studentPhone,
+        parentPhone,
+        email
+      };
+      state.modal = null;
+      persistState();
+      render();
+      showToast('تم تحديث بيانات الطالب ورقم ولي الأمر بنجاح.');
+    };
+
+    // =========================================================================
+    // قوالب العرض (Header, Landing, Dashboard, Modals)
+    // =========================================================================
+    function renderHeader() {
+      const u = state.currentUser;
+      return `
+        <header class="sticky top-0 z-40 glass-surface border-b border-slate-200/80 shadow-xs">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
+            <!-- هوية المنصة -->
+            <button type="button" onclick="navigateView('landing')" class="flex items-center gap-2.5 text-right cursor-pointer group">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-teal-600 text-white flex items-center justify-center shadow-md shadow-indigo-200/70 group-hover:scale-105 transition-transform">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 10L12 5 2 10l10 5 10-5z"></path>
+                  <path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"></path>
+                </svg>
+              </div>
+              <div>
+                <span class="text-base sm:text-lg font-black text-slate-900 block leading-tight">منصة المستر التعليمية</span>
+                <span class="text-[11px] font-semibold text-slate-500 hidden sm:block">بوابة الطالب • الكورسات • الكتب والمذكرات</span>
+              </div>
+            </button>
+
+            <!-- روابط الأقسام السريعة -->
+            <nav class="hidden lg:flex items-center gap-6 text-sm font-bold text-slate-600">
+              <button type="button" onclick="navigateView('landing')" class="hover:text-indigo-700 transition-colors cursor-pointer">الرئيسية</button>
+              <button type="button" onclick="navigateView('landing', 'features-sec')" class="hover:text-indigo-700 transition-colors cursor-pointer">مميزات المستر</button>
+              <button type="button" onclick="navigateView('landing', 'courses-sec')" class="hover:text-indigo-700 transition-colors cursor-pointer">الكورسات المتاحة</button>
+              <button type="button" onclick="navigateView('landing', 'books-sec')" class="hover:text-indigo-700 transition-colors cursor-pointer">الكتب والمذكرات</button>
+              ${u ? `<button type="button" onclick="navigateView('dashboard')" class="px-3 py-1.5 rounded-xl ${state.view === 'dashboard' ? 'bg-indigo-50 text-indigo-700 font-extrabold' : 'hover:text-indigo-700'} cursor-pointer">لوحة الطالب</button>` : ''}
+            </nav>
+
+            <!-- أزرار الدخول والتسجيل أو شارة الطالب -->
+            <div class="flex items-center gap-2">
+              ${
+                u
+                  ? `
+                  <button type="button" onclick="openProfileModal()" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/80 text-xs font-extrabold flex items-center gap-2 cursor-pointer" title="عرض وتعديل بيانات الطالب وولي الأمر">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="max-w-[110px] sm:max-w-[150px] truncate">${escapeHtml(u.fullName)}</span>
+                  </button>
+                  <button type="button" onclick="navigateView('${state.view === 'dashboard' ? 'landing' : 'dashboard'}')" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold cursor-pointer">
+                    ${state.view === 'dashboard' ? 'الرئيسية' : 'لوحة الطالب'}
+                  </button>
+                  <button type="button" onclick="logoutStudent()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold cursor-pointer">
+                    تسجيل الخروج
+                  </button>
+                `
+                  : `
+                  <button type="button" onclick="openAuthModal('login')" class="px-3.5 sm:px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs sm:text-sm font-extrabold transition-colors cursor-pointer">
+                    تسجيل الدخول
+                  </button>
+                  <button type="button" onclick="openAuthModal('register')" class="px-4 sm:px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-black shadow-md shadow-indigo-600/20 transition-all cursor-pointer">
+                    إنشاء حساب
+                  </button>
+                `
+              }
+            </div>
+          </div>
+        </header>
+      `;
+    }
+
+    function renderLandingPage() {
+      const filters = ['الكل', 'الصف الثالث الثانوي - ثانوية عامة', 'الصف الثاني الثانوي', 'الصف الأول الثانوي'];
+      const filteredCourses =
+        state.courseFilter === 'الكل'
+          ? ALL_COURSES
+          : ALL_COURSES.filter((c) => c.grade === state.courseFilter);
+
+      return `
+        <div class="space-y-20 pt-8 sm:pt-12 pb-16">
+          <!-- 1) القسم الترحيبي (Hero Section) -->
+          <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-surface rounded-3xl border border-slate-200/90 shadow-lg p-6 sm:p-10 lg:p-12">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div class="lg:col-span-7 space-y-5">
+                  <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-extrabold">
+                    <span>منصة تعليمية متكاملة للمرحلة الثانوية</span>
+                  </div>
+                  <h1 class="text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
+                    طريقك للتفوّق يبدأ من هنا مع{' '}
+                    <span class="text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 to-teal-600">
+                      المستر
+                    </span>
+                  </h1>
+                  <p class="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl">
+                    سجّل حسابك الآن في ثوانٍ لتصل مباشرة إلى محاضراتك المصوّرة، الاختبارات الإلكترونية الفورية، الواجبات المنزلية، وتقارير المتابعة الدورية مع ولي الأمر.
+                  </p>
+                  <div class="flex flex-wrap items-center gap-3 pt-1">
+                    <button type="button" onclick="${state.currentUser ? "navigateView('dashboard')" : "openAuthModal('register')"}" class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-lg shadow-indigo-600/20 transition-all cursor-pointer">
+                      ${state.currentUser ? 'الذهاب إلى لوحة الطالب' : 'ابدأ الآن وأنشئ حسابك'}
+                    </button>
+                    <a href="#courses-sec" class="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-sm font-extrabold transition-all">
+                      استكشف الكورسات
+                    </a>
+                  </div>
+                </div>
+
+                <!-- بطاقة ملخص سريعة لما يحصل عليه الطالب بعد التسجيل -->
+                <div class="lg:col-span-5 bg-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-xl space-y-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-amber-300 bg-amber-400/15 px-3 py-1 rounded-full border border-amber-400/30">
+                      بوابة الطالب الذكية
+                    </span>
+                    <span class="text-xs text-slate-400 font-bold">دخول فوري</span>
+                  </div>
+                  <h2 class="text-xl font-black">ماذا ينتظرك فور إنشاء الحساب؟</h2>
+                  <ul class="space-y-2.5 text-xs sm:text-sm text-slate-200">
+                    <li class="flex items-center gap-2.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>صفحة مخصصة تضم جميع <strong>المحاضرات</strong> ومذكرات الـ PDF</span></li>
+                    <li class="flex items-center gap-2.5"><span class="w-2 h-2 rounded-full bg-indigo-400"></span><span><strong>اختبارات</strong> تفاعلية بتصحيح لحظي</span></li>
+                    <li class="flex items-center gap-2.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span><span>سجل <strong>النتائج</strong> وتقارير المتابعة على رقم ولي الأمر</span></li>
+                    <li class="flex items-center gap-2.5"><span class="w-2 h-2 rounded-full bg-teal-400"></span><span>تسليم <strong>الواجبات</strong> واستكشاف <strong>الكورسات المقترحة</strong> لصفك</span></li>
+                  </ul>
+                  <button type="button" onclick="${state.currentUser ? "navigateView('dashboard')" : "openAuthModal('register')"}" class="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm font-black transition-colors cursor-pointer">
+                    ${state.currentUser ? 'افتح لوحة الطالب الآن' : 'أنشئ حسابك وابدأ المذاكرة'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2) مميزات المستر (6 بطاقات غنية) -->
+          <section id="features-sec" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-8">
+              <span class="text-xs font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">لماذا منصتنا؟</span>
+              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">مميزات المستر</h2>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">منظومة تعليمية متكاملة تجمع بين جودة الشرح ودقة المتابعة مع الطالب وولي الأمر.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              ${TEACHER_FEATURES.map(
+                (f) => `
+                <div class="glass-surface rounded-3xl border border-slate-200/90 p-6 shadow-xs hover:shadow-md transition-all">
+                  <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-extrabold px-3 py-1 rounded-full border ${f.tone}">${escapeHtml(f.badge)}</span>
+                    <span class="w-8 h-8 rounded-xl bg-slate-900 text-white text-xs font-black flex items-center justify-center">✓</span>
+                  </div>
+                  <h3 class="text-lg font-black text-slate-900 mb-2">${escapeHtml(f.title)}</h3>
+                  <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${escapeHtml(f.desc)}</p>
+                </div>
+              `
+              ).join('')}
+            </div>
+          </section>
+
+          <!-- 3) الكورسات المتاحة (مع تصفية حسب الصف الدراسي) -->
+          <section id="courses-sec" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div>
+                <span class="text-xs font-extrabold text-teal-800 bg-teal-50 px-3 py-1 rounded-full">شرح وتأسيس ومراجعات</span>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">الكورسات المتاحة</h2>
+              </div>
+
+              <!-- أزرار الفلترة -->
+              <div class="flex flex-wrap gap-2">
+                ${filters
+                  .map(
+                    (flt) => `
+                  <button type="button" onclick="setCourseFilter('${escapeHtml(flt)}')" class="px-3.5 py-2 rounded-xl text-xs font-extrabold border transition-colors cursor-pointer ${
+                      state.courseFilter === flt
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }">
+                    ${flt === 'الكل' ? 'جميع الصفوف' : escapeHtml(flt)}
+                  </button>
+                `
+                  )
+                  .join('')}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+              ${filteredCourses
+                .map(
+                  (c) => `
+                <article class="bg-white rounded-3xl border border-slate-200 shadow-xs hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between">
+                  <div>
+                    <div class="bg-gradient-to-l ${c.accent} p-5 text-white">
+                      <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-xs font-extrabold bg-white/15 px-3 py-1 rounded-full">${escapeHtml(c.subject)}</span>
+                        <span class="text-xs font-bold bg-black/25 px-3 py-1 rounded-full">${escapeHtml(c.type)}</span>
+                      </div>
+                      <h3 class="text-lg font-black leading-snug">${escapeHtml(c.title)}</h3>
+                      <p class="text-xs text-white/80 mt-1 font-semibold">${escapeHtml(c.teacher)} • ${escapeHtml(c.grade)}</p>
+                    </div>
+
+                    <div class="p-6 space-y-4">
+                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${escapeHtml(c.desc)}</p>
+
+                      <div class="grid grid-cols-2 gap-2.5 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                        <div>
+                          <span class="text-slate-400 block font-semibold">عدد المحاضرات</span>
+                          <strong class="text-slate-900 font-black">${c.lessonsCount} محاضرات</strong>
+                        </div>
+                        <div>
+                          <span class="text-slate-400 block font-semibold">المدة الإجمالية</span>
+                          <strong class="text-slate-900 font-black">${escapeHtml(c.hours)}</strong>
+                        </div>
+                      </div>
+
+                      <div class="flex items-baseline justify-between pt-1 border-t border-slate-100">
+                        <span class="text-xs font-bold text-slate-500">قيمة الاشتراك</span>
+                        <div>
+                          <span class="text-2xl font-black text-slate-900">${c.price.toLocaleString('ar-EG')}</span>
+                          <span class="text-xs font-bold text-slate-500 mr-1">ج.م</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="px-6 pb-6">
+                    <button type="button" onclick="${state.currentUser ? `enrollCourseDirect('${c.id}')` : "openAuthModal('register')"}" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-black shadow-sm transition-colors cursor-pointer">
+                      ${state.currentUser ? 'اشترك وابدأ المشاهدة' : 'سجّل الآن'}
+                    </button>
+                  </div>
+                </article>
+              `
+                )
+                .join('')}
+            </div>
+          </section>
+
+          <!-- 4) الكتب والمذكرات المتاحة -->
+          <section id="books-sec" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-8">
+              <span class="text-xs font-extrabold text-amber-800 bg-amber-50 px-3 py-1 rounded-full">بنوك الأسئلة والمذكرات</span>
+              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">الكتب والمذكرات المتاحة</h2>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">اطلب نسختك المطبوعة أو الإلكترونية وراجع محتوى الكتاب قبل الحجز.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+              ${ALL_BOOKS.map((b) => {
+                const ordered = state.orderedBookIds.includes(b.id);
+                return `
+                  <article class="bg-white rounded-3xl border border-slate-200 shadow-xs hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between">
+                    <div>
+                      <div class="bg-gradient-to-br ${b.tone} p-6 text-white">
+                        <span class="text-xs font-extrabold bg-white/15 px-3 py-1 rounded-full">${escapeHtml(b.format)}</span>
+                        <h3 class="text-lg font-black mt-3 leading-snug">${escapeHtml(b.title)}</h3>
+                        <p class="text-xs text-white/80 mt-1 font-semibold">${escapeHtml(b.subject)}</p>
+                      </div>
+
+                      <div class="p-6 space-y-4">
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${escapeHtml(b.desc)}</p>
+                        <div class="flex items-center justify-between text-xs bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">
+                          <span class="text-slate-500 font-bold">عدد الصفحات</span>
+                          <span class="font-black text-slate-900">${b.pages} صفحة</span>
+                        </div>
+                        <div class="flex items-baseline justify-between pt-1 border-t border-slate-100">
+                          <span class="text-xs font-bold text-slate-500">سعر الكتاب</span>
+                          <div>
+                            <span class="text-2xl font-black text-slate-900">${b.price.toLocaleString('ar-EG')}</span>
+                            <span class="text-xs font-bold text-slate-500 mr-1">ج.م</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="px-6 pb-6 flex items-center gap-2.5">
+                      <button type="button" onclick="openBookModal('${b.id}')" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold cursor-pointer">
+                        معاينة التفاصيل
+                      </button>
+                      <button type="button" onclick="orderBook('${b.id}')" class="flex-1 py-2.5 rounded-xl text-xs font-black cursor-pointer ${
+                        ordered ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-900 hover:bg-indigo-600 text-white'
+                      }">
+                        ${ordered ? 'تم الحجز ✓' : 'طلب / حجز'}
+                      </button>
+                    </div>
+                  </article>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderStudentDashboard() {
+      const u = state.currentUser || state.accounts[0];
+      const enrolledCourses = ALL_COURSES.filter((c) => state.enrolledCourseIds.includes(c.id));
+      const activeCourse =
+        enrolledCourses.find((c) => c.id === state.activeCourseId) || enrolledCourses[0] || ALL_COURSES[0];
+      const activeLesson =
+        activeCourse?.lessons.find((l) => l.id === state.activeLessonId) || activeCourse?.lessons[0];
+
+      const tabs = [
+        { id: 'lectures', label: 'المحاضرات', count: enrolledCourses.reduce((s, c) => s + c.lessons.length, 0) },
+        { id: 'exams', label: 'الاختبارات', count: EXAMS_DATA.length },
+        { id: 'results', label: 'النتائج', count: state.results.length },
+        { id: 'assignments', label: 'الواجبات', count: state.assignments.length },
+        { id: 'suggested', label: 'الكورسات المقترحة', count: ALL_COURSES.filter((c) => !state.enrolledCourseIds.includes(c.id)).length }
+      ];
+
+      let tabContentHtml = '';
+
+      // 1) تبويب المحاضرات
+      if (state.dashboardTab === 'lectures') {
+        const isWatched = activeLesson ? state.watchedLessonIds.includes(activeLesson.id) : false;
+        tabContentHtml = `
+          <div class="space-y-6">
+            <!-- اختيار الكورس المشترك به -->
+            <div class="flex flex-wrap items-center gap-2">
+              ${enrolledCourses
+                .map((c) => {
+                  const watchedCount = c.lessons.filter((l) => state.watchedLessonIds.includes(l.id)).length;
+                  const pct = c.lessons.length ? Math.round((watchedCount / c.lessons.length) * 100) : 0;
+                  return `
+                    <button type="button" onclick="selectActiveCourse('${c.id}')" class="px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold border transition-all cursor-pointer ${
+                      activeCourse.id === c.id
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }">
+                      <span>${escapeHtml(c.title)}</span>
+                      <span class="mr-2 text-[11px] opacity-85">(${pct}%)</span>
+                    </button>
+                  `;
+                })
+                .join('')}
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-7">
+              <!-- مشغل الفيديو -->
+              <div class="lg:col-span-8 bg-slate-950 text-white rounded-3xl overflow-hidden shadow-xl">
+                <div class="aspect-video bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex flex-col items-center justify-center p-6 text-center relative">
+                  <span class="absolute top-4 right-4 text-[11px] font-mono bg-white/10 px-3 py-1 rounded-lg text-slate-200">
+                    الطالب: ${escapeHtml(u.studentPhone)}
+                  </span>
+                  <div class="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/30 mb-4">
+                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                  </div>
+                  <h3 class="text-lg sm:text-2xl font-black max-w-xl">${escapeHtml(activeLesson?.title || '')}</h3>
+                  <p class="text-xs text-indigo-200 mt-2">مدة المحاضرة: ${escapeHtml(activeLesson?.duration || '')}</p>
+                </div>
+
+                <div class="p-5 bg-slate-900 flex flex-wrap items-center justify-between gap-3">
+                  <button type="button" onclick="triggerPdfPreview('${escapeHtml(activeLesson?.pdfName || 'ملخص.pdf')}')" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 text-xs font-extrabold cursor-pointer">
+                    📄 تحميل ملخص PDF (${escapeHtml(activeLesson?.pdfName || 'ملخص.pdf')})
+                  </button>
+
+                  <button type="button" onclick="toggleWatchedLesson('${activeLesson?.id || ''}')" class="px-4 py-2.5 rounded-xl text-xs font-black cursor-pointer ${
+                    isWatched ? 'bg-emerald-400 text-slate-950' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  }">
+                    ${isWatched ? 'تمت المشاهدة ✓' : 'تحديد كمشاهَد'}
+                  </button>
+                </div>
+              </div>
+
+              <!-- قائمة محاضرات الكورس -->
+              <div class="lg:col-span-4 bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-3 h-fit">
+                <h4 class="font-black text-slate-900 pb-2 border-b border-slate-100">قائمة محاضرات الكورس</h4>
+                ${activeCourse.lessons
+                  .map((les, i) => {
+                    const done = state.watchedLessonIds.includes(les.id);
+                    const selected = les.id === activeLesson?.id;
+                    return `
+                      <button type="button" onclick="selectActiveLesson('${les.id}')" class="w-full text-right p-3.5 rounded-2xl border text-xs sm:text-sm flex items-start justify-between gap-2 transition-all cursor-pointer ${
+                        selected ? 'bg-indigo-50 border-indigo-300 text-indigo-950 font-extrabold' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700 font-semibold'
+                      }">
+                        <div>
+                          <span class="block">${i + 1}. ${escapeHtml(les.title)}</span>
+                          <span class="text-[11px] text-slate-400 font-mono mt-1 block">${escapeHtml(les.duration)}</span>
+                        </div>
+                        <span class="text-xs font-black ${done ? 'text-emerald-600' : 'text-slate-300'}">${done ? '✓' : '○'}</span>
+                      </button>
+                    `;
+                  })
+                  .join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 2) تبويب الاختبارات
+      if (state.dashboardTab === 'exams') {
+        const currentExam = EXAMS_DATA.find((e) => e.id === state.activeExamId) || EXAMS_DATA[0];
+        tabContentHtml = `
+          <div class="max-w-3xl mx-auto space-y-5">
+            <div class="flex flex-wrap gap-2">
+              ${EXAMS_DATA.map(
+                (ex) => `
+                <button type="button" onclick="selectExam('${ex.id}')" class="px-4 py-2 rounded-xl text-xs font-extrabold border cursor-pointer ${
+                  currentExam.id === ex.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'
+                }">
+                  ${escapeHtml(ex.subject)} — ${escapeHtml(ex.title)}
+                </button>
+              `
+              ).join('')}
+            </div>
+
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div>
+                  <span class="text-xs font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">${escapeHtml(currentExam.subject)}</span>
+                  <h3 class="text-xl font-black text-slate-900 mt-2">${escapeHtml(currentExam.title)}</h3>
+                </div>
+                <span class="text-xs font-extrabold bg-slate-100 text-slate-700 px-3.5 py-2 rounded-xl">
+                  المدة: ${currentExam.durationMinutes} دقيقة
+                </span>
+              </div>
+
+              <div class="space-y-5">
+                ${currentExam.questions
+                  .map(
+                    (q, idx) => `
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <p class="font-extrabold text-sm sm:text-base text-slate-900">${idx + 1}. ${escapeHtml(q.text)}</p>
+                    <div class="space-y-2">
+                      ${q.options
+                        .map((opt, optIdx) => {
+                          const chosen = state.examAnswers[q.id] === optIdx;
+                          const isCorrect = state.lastExamSubmitted && q.correct === optIdx;
+                          const isWrong = state.lastExamSubmitted && chosen && q.correct !== optIdx;
+                          let cls = 'bg-white border-slate-200 hover:border-indigo-300 text-slate-800';
+                          if (isCorrect) cls = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-black';
+                          else if (isWrong) cls = 'bg-rose-50 border-rose-500 text-rose-950 font-bold';
+                          else if (chosen) cls = 'bg-indigo-50 border-indigo-600 text-indigo-950 font-extrabold';
+
+                          return `
+                            <button type="button" onclick="chooseExamOption('${q.id}', ${optIdx})" class="w-full text-right p-3 rounded-xl border text-xs sm:text-sm transition-all cursor-pointer ${cls}">
+                              ${escapeHtml(opt)}
+                            </button>
+                          `;
+                        })
+                        .join('')}
+                    </div>
+                  </div>
+                `
+                  )
+                  .join('')}
+              </div>
+
+              <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <span class="text-xs text-slate-500">تُسجّل الدرجة تلقائياً في تبويب «النتائج» وتُرسل لولي الأمر.</span>
+                ${
+                  !state.lastExamSubmitted
+                    ? `<button type="button" onclick="submitCurrentExam()" class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md cursor-pointer">تسليم الاختبار الآن</button>`
+                    : `<button type="button" onclick="selectExam('${currentExam.id}')" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-extrabold cursor-pointer">إعادة الاختبار للتدريب</button>`
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3) تبويب النتائج
+      if (state.dashboardTab === 'results') {
+        const avgPct = state.results.length
+          ? Math.round(state.results.reduce((s, r) => s + r.percentage, 0) / state.results.length)
+          : 0;
+
+        tabContentHtml = `
+          <div class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                <span class="text-xs font-bold text-slate-500">عدد الاختبارات المكتملة</span>
+                <p class="text-3xl font-black text-slate-900 mt-1">${state.results.length}</p>
+              </div>
+              <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                <span class="text-xs font-bold text-slate-500">متوسط النسبة المئوية</span>
+                <p class="text-3xl font-black text-indigo-700 mt-1">${avgPct}%</p>
+              </div>
+              <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                <span class="text-xs font-bold text-slate-500">حالة تقارير ولي الأمر</span>
+                <p class="text-sm font-black text-emerald-700 mt-2">مفعّلة على الرقم: ${escapeHtml(u.parentPhone)}</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+              <div class="p-6 border-b border-slate-100">
+                <h3 class="text-lg font-black text-slate-900">سجل درجات الاختبارات والتقارير</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs sm:text-sm">
+                  <thead class="bg-slate-50 text-slate-500 font-extrabold">
+                    <tr>
+                      <th class="py-3.5 px-6">اسم الاختبار</th>
+                      <th class="py-3.5 px-6">التاريخ</th>
+                      <th class="py-3.5 px-6">الدرجة</th>
+                      <th class="py-3.5 px-6">النسبة</th>
+                      <th class="py-3.5 px-6">تقرير ولي الأمر</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${state.results
+                      .map(
+                        (r) => `
+                      <tr>
+                        <td class="py-4 px-6 font-extrabold text-slate-900">${escapeHtml(r.examTitle)}</td>
+                        <td class="py-4 px-6 text-slate-500 font-mono">${escapeHtml(r.date)}</td>
+                        <td class="py-4 px-6 font-black text-slate-900">${r.score} / ${r.total}</td>
+                        <td class="py-4 px-6">
+                          <span class="px-3 py-1 rounded-full text-xs font-black ${
+                            r.percentage >= 85
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : r.percentage >= 65
+                              ? 'bg-indigo-100 text-indigo-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }">${r.percentage}%</span>
+                        </td>
+                        <td class="py-4 px-6">
+                          <span class="text-xs font-extrabold text-teal-800 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full">
+                            تم الإرسال إلى ${escapeHtml(u.parentPhone)} ✓
+                          </span>
+                        </td>
+                      </tr>
+                    `
+                      )
+                      .join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 4) تبويب الواجبات
+      if (state.dashboardTab === 'assignments') {
+        tabContentHtml = `
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            ${state.assignments
+              .map((hw) => {
+                const statusBadge =
+                  hw.status === 'graded'
+                    ? '<span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800">تم التصحيح ✓</span>'
+                    : hw.status === 'submitted'
+                    ? '<span class="px-3 py-1 rounded-full text-xs font-black bg-indigo-100 text-indigo-800">تم التسليم</span>'
+                    : '<span class="px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-800">مطلوب التسليم</span>';
+
+                return `
+                  <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between gap-4">
+                    <div class="space-y-3">
+                      <div class="flex items-center justify-between gap-2">
+                        ${statusBadge}
+                        <span class="text-[11px] font-bold text-slate-400">${escapeHtml(hw.dueDate)}</span>
+                      </div>
+                      <h3 class="text-base sm:text-lg font-black text-slate-900 leading-snug">${escapeHtml(hw.title)}</h3>
+                      <p class="text-xs text-slate-500 font-semibold">${escapeHtml(hw.lectureName)}</p>
+
+                      ${
+                        hw.grade
+                          ? `<div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950">
+                              <strong class="block font-black">الدرجة: ${escapeHtml(hw.grade)}</strong>
+                              <span class="block mt-1">${escapeHtml(hw.feedback || '')}</span>
+                            </div>`
+                          : ''
+                      }
+
+                      ${
+                        hw.studentAnswer
+                          ? `<p class="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>إجابتك:</strong> ${escapeHtml(hw.studentAnswer)}</p>`
+                          : ''
+                      }
+                    </div>
+
+                    <button type="button" onclick="openHomeworkModal('${hw.id}')" class="w-full py-2.5 rounded-xl text-xs font-black cursor-pointer ${
+                      hw.status === 'pending'
+                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
+                    }">
+                      ${hw.status === 'pending' ? 'تسليم الواجب الآن' : 'تعديل أو عرض التسليم'}
+                    </button>
+                  </div>
+                `;
+              })
+              .join('')}
+          </div>
+        `;
+      }
+
+      // 5) تبويب الكورسات المقترحة
+      if (state.dashboardTab === 'suggested') {
+        const unEnrolled = ALL_COURSES.filter((c) => !state.enrolledCourseIds.includes(c.id));
+        const recommendedFirst = [
+          ...unEnrolled.filter((c) => c.grade === u.grade),
+          ...unEnrolled.filter((c) => c.grade !== u.grade)
+        ];
+
+        tabContentHtml = `
+          <div class="space-y-6">
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-black text-slate-900">كورسات مقترحة خصيصاً لـ (${escapeHtml(u.grade)})</h3>
+                <p class="text-xs text-slate-500 mt-0.5">اشترك مباشرة بنقرة واحدة أو أدخل كود التفعيل (مثل CHEM-2026 أو MATH-2SEC).</p>
+              </div>
+              <form onsubmit="redeemCodeInDashboard(event)" class="flex gap-2 w-full md:w-auto">
+                <input type="text" name="courseCode" placeholder="كود التفعيل..." class="flex-1 md:w-48 px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold uppercase" />
+                <button type="submit" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black cursor-pointer">تفعيل</button>
+              </form>
+            </div>
+
+            ${
+              recommendedFirst.length === 0
+                ? `<div class="bg-white rounded-3xl border border-slate-200 p-10 text-center text-sm font-bold text-emerald-700">أنت مشترك بالفعل في جميع الكورسات المتاحة على المنصة!</div>`
+                : `
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${recommendedFirst
+                  .map(
+                    (c) => `
+                  <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div class="bg-gradient-to-l ${c.accent} p-5 text-white">
+                        <span class="text-[11px] font-extrabold bg-white/15 px-2.5 py-1 rounded-full">
+                          ${c.grade === u.grade ? 'مناسب لصفك الدراسي ★' : escapeHtml(c.grade)}
+                        </span>
+                        <h4 class="text-lg font-black mt-2.5">${escapeHtml(c.title)}</h4>
+                        <p class="text-xs text-white/80 mt-1">${escapeHtml(c.teacher)} • ${escapeHtml(c.hours)}</p>
+                      </div>
+                      <div class="p-5 space-y-3">
+                        <p class="text-xs text-slate-600 leading-relaxed">${escapeHtml(c.desc)}</p>
+                        <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+                          <span class="text-slate-500 font-bold">الاشتراك: <strong>${c.price} ج.م</strong></span>
+                          <span class="font-mono text-indigo-700 font-bold">كود: ${escapeHtml(c.code)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="p-5 pt-0">
+                      <button type="button" onclick="enrollCourseDirect('${c.id}')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer">
+                        اشترك في الكورس الآن
+                      </button>
+                    </div>
+                  </div>
+                `
+                  )
+                  .join('')}
+              </div>
+            `
+            }
+          </div>
+        `;
+      }
+
+      return `
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 space-y-7">
+          <!-- رأس ترحيبي يعرض الاسم الكامل والصف ورقم الطالب ورقم ولي الأمر -->
+          <section class="glass-surface rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+              <div class="space-y-2">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs font-black px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">بوابة الطالب النشطة</span>
+                  <span class="text-xs font-extrabold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">${escapeHtml(u.grade)}</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900">أهلاً بك، ${escapeHtml(u.fullName)}</h1>
+                <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600 pt-1">
+                  <span class="px-3 py-1 rounded-xl bg-slate-100 font-bold">📱 هاتف الطالب: <strong dir="ltr">${escapeHtml(u.studentPhone)}</strong></span>
+                  <span class="px-3 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 font-bold">👨‍👩‍👦 رقم ولي الأمر: <strong dir="ltr">${escapeHtml(u.parentPhone)}</strong></span>
+                  ${u.email ? `<span class="px-3 py-1 rounded-xl bg-slate-100 font-bold">✉️ ${escapeHtml(u.email)}</span>` : ''}
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2.5">
+                <button type="button" onclick="openProfileModal()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs font-extrabold cursor-pointer">
+                  تعديل بياناتي
+                </button>
+                <button type="button" onclick="logoutStudent()" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black cursor-pointer">
+                  تسجيل الخروج
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- شريط التنقل الداخلي للأقسام الخمسة -->
+          <nav aria-label="أقسام بوابة الطالب" class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-2xs">
+            ${tabs
+              .map(
+                (t) => `
+              <button type="button" onclick="setDashboardTab('${t.id}')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
+                  state.dashboardTab === t.id
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }">
+                <span>${t.label}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded-full ${
+                  state.dashboardTab === t.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+                }">${t.count}</span>
+              </button>
+            `
+              )
+              .join('')}
+          </nav>
+
+          <!-- محتوى التبويب النشط -->
+          <div>${tabContentHtml}</div>
+        </div>
+      `;
+    }
+
+    function renderModals() {
+      if (!state.modal) return '';
+
+      // 1) مودال إنشاء حساب جديد / تسجيل الدخول
+      if (state.modal.type === 'auth') {
+        const isReg = state.modal.tab === 'register';
+        return `
+          <div class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-8 my-8 space-y-5">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h2 class="text-xl sm:text-2xl font-black text-slate-900">${isReg ? 'إنشاء حساب طالب جديد' : 'تسجيل الدخول'}</h2>
+                  <p class="text-xs text-slate-500 mt-1">
+                    ${isReg ? 'أدخل بياناتك بدقة لربط حسابك وتقارير المتابعة مع ولي الأمر.' : 'ادخل برقم هاتفك أو بريدك الإلكتروني لفتح لوحة الطالب.'}
+                  </p>
+                </div>
+                <button type="button" onclick="closeModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">✕</button>
+              </div>
+
+              <!-- تبويبات التبديل -->
+              <div class="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-2xl">
+                <button type="button" onclick="switchAuthTab('register')" class="py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  isReg ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'
+                }">
+                  إنشاء حساب جديد
+                </button>
+                <button type="button" onclick="switchAuthTab('login')" class="py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  !isReg ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'
+                }">
+                  تسجيل الدخول
+                </button>
+              </div>
+
+              ${
+                state.authError
+                  ? `<div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">${escapeHtml(state.authError)}</div>`
+                  : ''
+              }
+
+              ${
+                isReg
+                  ? `
+                <form id="register-form" onsubmit="handleRegisterSubmit(event)" class="space-y-3.5">
+                  <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">الاسم بالكامل <span class="text-rose-500">*</span></label>
+                    <input type="text" name="fullName" required placeholder="مثال: أحمد محمد محمود" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-extrabold text-slate-700 mb-1">رقم هاتف الطالب <span class="text-rose-500">*</span></label>
+                      <input type="tel" name="studentPhone" required placeholder="01012345678" dir="ltr" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-extrabold text-slate-700 mb-1">رقم ولي الأمر <span class="text-rose-500">*</span></label>
+                      <input type="tel" name="parentPhone" required placeholder="01198765432" dir="ltr" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-extrabold text-slate-700 mb-1">البريد الإلكتروني <span class="text-slate-400 font-semibold">(اختياري)</span></label>
+                      <input type="email" name="email" placeholder="student@example.com" dir="ltr" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-extrabold text-slate-700 mb-1">كلمة المرور <span class="text-rose-500">*</span></label>
+                      <input type="password" name="password" required placeholder="••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">الصف الدراسي <span class="text-rose-500">*</span></label>
+                    <select name="grade" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white font-bold">
+                      <option value="الصف الثالث الثانوي - ثانوية عامة">الصف الثالث الثانوي - ثانوية عامة</option>
+                      <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+                      <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
+                    </select>
+                  </div>
+
+                  <div class="pt-2">
+                    <button type="submit" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md cursor-pointer">
+                      إنشاء الحساب والدخول للمنصة
+                    </button>
+                  </div>
+                </form>
+              `
+                  : `
+                <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">رقم هاتف الطالب أو البريد الإلكتروني</label>
+                    <input type="text" name="identifier" required placeholder="أدخل رقم هاتفك أو بريدك الإلكتروني" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">كلمة المرور</label>
+                    <input type="password" name="password" required placeholder="••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+                  </div>
+
+                  <button type="submit" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md cursor-pointer">
+                    تسجيل الدخول
+                  </button>
+                </form>
+              `
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      // 2) مودال معاينة الكتاب
+      if (state.modal.type === 'book') {
+        const book = ALL_BOOKS.find((b) => b.id === state.modal.bookId);
+        if (!book) return '';
+        const ordered = state.orderedBookIds.includes(book.id);
+        return `
+          <div class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden">
+              <div class="bg-gradient-to-br ${book.tone} p-6 text-white flex items-start justify-between">
+                <div>
+                  <span class="text-xs font-bold bg-white/15 px-3 py-1 rounded-full">${escapeHtml(book.format)}</span>
+                  <h3 class="text-xl font-black mt-2">${escapeHtml(book.title)}</h3>
+                </div>
+                <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-white/15 text-white cursor-pointer">✕</button>
+              </div>
+              <div class="p-6 space-y-4">
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${escapeHtml(book.desc)}</p>
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700">
+                  <strong class="block text-slate-900 mb-1">عينة من المحتوى:</strong>
+                  <span>${escapeHtml(book.sample)}</span>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                  <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold cursor-pointer">إغلاق</button>
+                  <button type="button" onclick="orderBook('${book.id}')" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer">
+                    ${ordered ? 'تم حجز الكتاب ✓' : `حجز الكتاب (${book.price} ج.م)`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3) مودال تسليم الواجب
+      if (state.modal.type === 'homework') {
+        const hw = state.assignments.find((h) => h.id === state.modal.hwId);
+        if (!hw) return '';
+        return `
+          <div class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-7 space-y-4">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="text-xs font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">تسليم الواجب</span>
+                  <h3 class="text-lg font-black text-slate-900 mt-2">${escapeHtml(hw.title)}</h3>
+                </div>
+                <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 text-slate-600 cursor-pointer">✕</button>
+              </div>
+
+              <form onsubmit="submitHomework(event, '${hw.id}')" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-700 mb-1">اكتب إجابتك أو ملاحظات الحل</label>
+                  <textarea name="answerText" rows="4" placeholder="اكتب خطوات الحل أو الإجابات النهائية هنا..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">${escapeHtml(hw.studentAnswer || '')}</textarea>
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-700 mb-1">اسم ملف الحل المرفق (اختياري)</label>
+                  <input type="text" name="fileName" placeholder="مثال: واجب_المقاومات.pdf" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold cursor-pointer">إلغاء</button>
+                  <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer">إرسال الواجب</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+
+      // 4) مودال عرض وتعديل ملف الطالب ورقم ولي الأمر
+      if (state.modal.type === 'profile' && state.currentUser) {
+        const u = state.currentUser;
+        return `
+          <div class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-black text-slate-900">بيانات الطالب وولي الأمر</h3>
+                <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 text-slate-600 cursor-pointer">✕</button>
+              </div>
+              <form onsubmit="saveProfileChanges(event)" class="space-y-3.5">
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-700 mb-1">الاسم بالكامل</label>
+                  <input type="text" name="fullName" value="${escapeHtml(u.fullName)}" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-700 mb-1">رقم هاتف الطالب</label>
+                  <input type="tel" name="studentPhone" value="${escapeHtml(u.studentPhone)}" required dir="ltr" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-right" />
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-700 mb-1">رقم ولي الأمر</label>
+                  <input type="tel" name="parentPhone" value="${escapeHtml(u.parentPhone)}" required dir="ltr" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-right" />
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-700 mb-1">البريد الإلكتروني (اختياري)</label>
+                  <input type="email" name="email" value="${escapeHtml(u.email || '')}" dir="ltr" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-right" />
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                  <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-xs font-extrabold cursor-pointer">إلغاء</button>
+                  <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black cursor-pointer">حفظ التعديلات</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+
+      return '';
+    }
+
+    function render() {
+      const root = document.getElementById('app');
+      if (!root) return;
+
+      const toastHtml = state.toast
+        ? `
+          <div class="fixed bottom-5 left-5 z-50 max-w-sm bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-2.5 text-xs sm:text-sm font-bold">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${
+              state.toast.tone === 'error' ? 'bg-rose-400' : state.toast.tone === 'info' ? 'bg-sky-400' : 'bg-emerald-400'
+            }"></span>
+            <span>${escapeHtml(state.toast.text)}</span>
+          </div>
+        `
+        : '';
+
+      root.innerHTML = `
+        ${renderHeader()}
+        <main class="flex-1">
+          ${state.view === 'dashboard' && state.currentUser ? renderStudentDashboard() : renderLandingPage()}
+        </main>
+        <footer class="glass-surface border-t border-slate-200/80 py-6 px-4 text-xs text-slate-500">
+          <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p class="font-bold text-slate-700">منصة المستر التعليمية — بوابة الطالب المتكاملة.</p>
+            <p>تُحفظ بيانات الحساب والمحاضرات والنتائج والواجبات تلقائياً في المتصفح.</p>
+          </div>
+        </footer>
+        ${renderModals()}
+        ${toastHtml}
+      `;
+    }
+
+    // التشغيل الأولي عند تحميل الصفحة
+    render();
+  </script>
+</body>
+</html>
